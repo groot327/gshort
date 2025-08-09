@@ -1,6 +1,6 @@
 {
   "name": "Node.js",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:0-22",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:0-20",
   "features": {},
   "postCreateCommand": "npm install -g firebase-tools"
 }
