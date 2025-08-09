@@ -1,2 +1,2 @@
-# gshortener
+# gshort
 My shortener
