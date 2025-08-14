@@ -1,5 +1,16 @@
 {
   "dependencies": {
+    "firebase": "^12.1.0",
     "firebase-tools": "^14.12.0"
-  }
+  },
+  "name": "gshort",
+  "description": "My shortener",
+  "version": "1.0.0",
+  "main": "script.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
