@@ -2,9 +2,9 @@
 document.getElementById('result').innerHTML = 'Checking Firebase...';
 
 if (typeof firebase === 'undefined') {
-  document.getElementById('result').innerHTML = 'Error: Firebase SDK not loaded. Check internet or script tags.';
+  document.getElementById('result').innerHTML += '<br>Error: Firebase SDK not loaded. Check internet or script tags.';
 } else {
-  document.getElementById('result').innerHTML = 'Firebase SDK loaded';
+  document.getElementById('result').innerHTML += '<br>Firebase SDK loaded';
   try {
     const { initializeApp } = firebase;
     const { getFirestore, doc, setDoc, serverTimestamp, getDoc } = firebase.firestore;
@@ -29,24 +29,24 @@ if (typeof firebase === 'undefined') {
 
     // Function to shorten URL
     async function shortenUrl() {
-      document.getElementById('result').innerHTML = 'Function triggered';
+      document.getElementById('result').innerHTML += '<br>Function triggered';
       const longUrl = document.getElementById('longUrl').value;
       if (!longUrl || !longUrl.startsWith('http')) {
-        document.getElementById('result').innerHTML = 'Error: Please enter a valid URL starting with http or https';
+        document.getElementById('result').innerHTML += '<br>Error: Please enter a valid URL starting with http or https';
         return;
       }
 
       const shortCode = generateShortCode();
-      document.getElementById('result').innerHTML = 'Generated short code: ' + shortCode;
+      document.getElementById('result').innerHTML += '<br>Generated short code: ' + shortCode;
       try {
         await setDoc(doc(db, 'urls', shortCode), {
           longUrl: longUrl,
           createdAt: serverTimestamp()
         });
         const shortUrl = window.location.origin + '/' + shortCode;
-        document.getElementById('result').innerHTML = 'Success: Document written with ID: ' + shortCode + '<br>Shortened URL: <a href="' + shortUrl + '" target="_blank">' + shortUrl + '</a>';
+        document.getElementById('result').innerHTML += '<br>Success: Document written with ID: ' + shortCode + '<br>Shortened URL: <a href="' + shortUrl + '" target="_blank">' + shortUrl + '</a>';
       } catch (error) {
-        document.getElementById('result').innerHTML = 'Error: ' + error.message;
+        document.getElementById('result').innerHTML += '<br>Error: ' + error.message;
       }
     }
 
@@ -59,10 +59,10 @@ if (typeof firebase === 'undefined') {
           if (docSnap.exists()) {
             window.location.href = docSnap.data().longUrl; // Redirect to long URL
           } else {
-            document.getElementById('result').innerHTML = 'URL not found';
+            document.getElementById('result').innerHTML += '<br>URL not found';
           }
         } catch (error) {
-          document.getElementById('result').innerHTML = 'Error: ' + error.message;
+          document.getElementById('result').innerHTML = '<br>Error: ' + error.message;
         }
       }
     };
