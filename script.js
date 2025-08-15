@@ -58,7 +58,7 @@ window.shortenUrl = async function () {
   }
 };
 
-// Update `window.onload` to set the `data-shortcode` attribute if a short code is present:
+// Redirect logic for shortened URLs
 window.onload = async function () {
   if (!db) {
     document.getElementById('result').innerHTML += '<br>Error: Firestore not initialized';
@@ -88,7 +88,7 @@ window.onload = async function () {
         window.setTimeout(() => {
           document.getElementById('result').innerHTML += '<br>Redirect executed to ' + longUrl;
           window.location.replace(longUrl);
-        }, 500); // Increased delay to 500ms
+        }, 1000); // 1000ms delay
       } else {
         document.getElementById('result').innerHTML += '<br>URL not found in Firestore';
       }
