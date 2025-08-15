@@ -52,7 +52,7 @@ window.shortenUrl = async function () {
     });
     const shortUrl = window.location.origin + '/gshort/' + shortCode; // Adjust for subdirectory
     document.getElementById('result').innerHTML += '<br>Success: Document written with ID: ' + shortCode;
-    document.getElementById('result').innerHTML += '<br>Shortened URL: <a href="' + shortUrl + '">' + shortUrl + '</a>'; // Removed target="_blank" for testing
+    document.getElementById('result').innerHTML += '<br>Shortened URL: <a href="' + shortUrl + '">' + shortUrl + '</a>'; // No target="_blank"
   } catch (error) {
     document.getElementById('result').innerHTML += '<br>Error: ' + error.message;
   }
@@ -68,7 +68,7 @@ window.onload = async function () {
   document.getElementById('result').innerHTML += '<br>Full path: ' + path;
   let shortCode = path;
   if (path.startsWith('/gshort/')) {
-    shortCode = path.substring('/gshort/'.length); // Extract short code after '/gshort/'
+    shortCode = path.replace('/gshort/', ''); // Replace instead of substring for consistency
     document.getElementById('result').innerHTML += '<br>Extracted short code: ' + shortCode;
   } else if (path === '/gshort' || path === '/') {
     document.getElementById('result').innerHTML += '<br>At base page, no redirect';
@@ -82,8 +82,12 @@ window.onload = async function () {
       if (doc.exists) {
         const longUrl = doc.data().longUrl;
         document.getElementById('result').innerHTML += '<br>Found longUrl: ' + longUrl;
-        document.getElementById('result').innerHTML += '<br>Redirecting to ' + longUrl;
-        setTimeout(() => window.location.replace(longUrl), 0); // Force redirect with timeout
+        document.getElementById('result').innerHTML += '<br>Attempting redirect to ' + longUrl;
+        // Prevent page load interference
+        setTimeout(() => {
+          document.getElementById('result').innerHTML += '<br>Redirect executed';
+          window.location.replace(longUrl);
+        }, 100); // Slight delay to ensure DOM is ready
       } else {
         document.getElementById('result').innerHTML += '<br>URL not found in Firestore';
       }
