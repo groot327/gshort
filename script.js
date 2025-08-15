@@ -1,9 +1,10 @@
 const { default: firebase } = require("firebase/compat/app");
 
+document.getElementById('result').innerHTML = 'Required firebase/compat/app: ' + firebase;
 if (typeof firebase === 'undefined') {
-    document.getElementById('result').innerHTML = 'Error: Firebase SDK not loaded'
+    document.getElementById('result').innerHTML += 'Error: Firebase SDK not loaded'
 } else {
-    document.getElementById('result').innerHTML = 'Firebase SDK loaded'
+    document.getElementById('result').innerHTML += 'Firebase SDK loaded'
     try {
         firebase.initializeApp(firebaseConfig);
         document.getElementById('result').innerHTML += '<br>Firebase initialized';
