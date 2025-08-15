@@ -15,6 +15,11 @@
   <input type="text" id="longUrl" placeholder="Enter URL to shorten" style="width: 300px;">
   <button onclick="shortenUrl()">Shorten</button>
   <div id="result"></div>
+  <!-- Test inline script -->
+  <script>
+    document.getElementById('result').innerHTML = 'Inline script executed';
+  </script>
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js" defer></script>
   <script src="script.js" defer></script>
