@@ -47,9 +47,9 @@ async function shortenUrl() {
             createdAt: serverTimestamp()
         });
         const shortUrl = '${window.location.origin}/${shortCode}';
-        document.getElementById('result').innerHTML = 'Shortened URL: <a href="${shortUrl}" target="_blank">${shortUrl}</a>';
+        document.getElementById('result').innerHTML = 'Shortened URL: <a href="' + shortUrl + '" target="_blank">' + shortUrl + '</a>';
     } catch (error) {
-        document.getElementById('result').innerHTML = 'Error: ${error.message}';
+        document.getElementById('result').innerHTML = 'Error: ' + error.message;
     }
 }
 
@@ -65,7 +65,7 @@ window.onload = async function () {
                 document.getElementById('result').innerHTML = 'URL not found';
             }
         } catch (error) {
-            document.getElementById('result').innerHTML = 'Error: ${error.message}';
+            document.getElementById('result').innerHTML = 'Error: ' + error.message;
         }
     }
 };
