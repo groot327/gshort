@@ -64,20 +64,20 @@ window.onload = async function () {
     document.getElementById('result').innerHTML += '<br>Error: Firestore not initialized';
     return;
   }
-  let path = window.location.pathname; // Get full pathname
-  document.getElementById('result').innerHTML += '<br>Full path: ' + path;
-  let shortCode = path;
-  if (path.startsWith('/gshort/')) {
-    shortCode = path.replace('/gshort/', ''); // Extract short code
-    document.getElementById('result').innerHTML += '<br>Extracted short code: ' + shortCode;
-    document.body.setAttribute('data-shortcode', shortCode); // Set attribute to hide form
-  } else if (path === '/gshort' || path === '/') {
-    document.getElementById('result').innerHTML += '<br>At base page, no redirect';
-    return;
-  }
-  if (shortCode && shortCode.length === 6) { // Validate short code length
-    document.getElementById('result').innerHTML += '<br>Validating short code: ' + shortCode;
-    try {
+  try {
+    let path = window.location.pathname; // Get full pathname
+    document.getElementById('result').innerHTML += '<br>Full path: ' + path;
+    let shortCode = path;
+    if (path.startsWith('/gshort/')) {
+      shortCode = path.replace('/gshort/', ''); // Extract short code
+      document.getElementById('result').innerHTML += '<br>Extracted short code: ' + shortCode;
+      document.body.setAttribute('data-shortcode', 'true'); // Set attribute to 'true' to hide form
+    } else if (path === '/gshort' or path === '/') {
+      document.getElementById('result').innerHTML += '<br>At base page, no redirect';
+      return;
+    }
+    if (shortCode && shortCode.length === 6) { // Validate short code length
+      document.getElementById('result').innerHTML += '<br>Validating short code: ' + shortCode;
       document.getElementById('result').innerHTML += '<br>Querying Firestore for ' + shortCode;
       const doc = await db.collection('urls').doc(shortCode).get();
       document.getElementById('result').innerHTML += '<br>Query completed, exists: ' + doc.exists;
@@ -88,14 +88,14 @@ window.onload = async function () {
         window.setTimeout(() => {
           document.getElementById('result').innerHTML += '<br>Redirect executed to ' + longUrl;
           window.location.replace(longUrl);
-        }, 1000); // 1000ms delay
+        }, 2000); // Increased delay to 2000ms
       } else {
         document.getElementById('result').innerHTML += '<br>URL not found in Firestore';
       }
-    } catch (error) {
-      document.getElementById('result').innerHTML += '<br>Error during query: ' + error.message;
+    } else {
+      document.getElementById('result').innerHTML += '<br>Invalid short code length: ' + shortCode.length;
     }
-  } else {
-    document.getElementById('result').innerHTML += '<br>Invalid short code length: ' + shortCode.length;
+  } catch (error) {
+    document.getElementById('result').innerHTML += '<br>Error in onload function: ' + error.message;
   }
 };
