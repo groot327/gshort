@@ -1,17 +1,10 @@
-// Ensure firebase is loaded from CDN scripts
-document.getElementById('result').innerHTML += '<br>Checking Firebase...';
+document.getElementById('result').innerHTML = 'Checking Firebase...';
 
 if (typeof firebase === 'undefined') {
-  document.getElementById('result').innerHTML += '<br>Error: Firebase SDK not loaded. Check internet or script tags.';
+  document.getElementById('result').innerHTML = 'Error: Firebase SDK not loaded. Check internet or script tags.';
 } else {
-  document.getElementById('result').innerHTML += '<br>Firebase SDK loaded';
+  document.getElementById('result').innerHTML = 'Firebase SDK loaded';
   try {
-    const { initializeApp } = firebase;
-    const { getFirestore, doc, setDoc, serverTimestamp, getDoc } = firebase.firestore;
-    if (!firebaseConfig || firebaseConfig !== 'object') {
-      document.getElementById('result').innerHTML += '<br>Error: firebaseConfig is missing or invalid';
-      return;
-    }
     const firebaseConfig = {
       apiKey: "AIzaSyBBnkPe5qKDHWrPtgCBcAl4teU9W1h1qW0",
       authDomain: "g-url-shortener-64c6e.firebaseapp.com",
@@ -22,9 +15,9 @@ if (typeof firebase === 'undefined') {
       measurementId: "G-DJYYW10D48"
     };
 
-    const app = initializeApp(firebaseConfig);
+    firebase.initializeApp(firebaseConfig);
     document.getElementById('result').innerHTML += '<br>Firebase initialized';
-    const db = getFirestore(app);
+    const db = firebase.firestore();
 
     // Function to generate a random short code
     function generateShortCode() {
@@ -33,24 +26,24 @@ if (typeof firebase === 'undefined') {
 
     // Function to shorten URL
     async function shortenUrl() {
-      document.getElementById('result').innerHTML += '<br>Function triggered';
+      document.getElementById('result').innerHTML = 'Function triggered';
       const longUrl = document.getElementById('longUrl').value;
       if (!longUrl || !longUrl.startsWith('http')) {
-        document.getElementById('result').innerHTML += '<br>Error: Please enter a valid URL starting with http or https';
+        document.getElementById('result').innerHTML = 'Error: Please enter a valid URL starting with http or https';
         return;
       }
 
       const shortCode = generateShortCode();
-      document.getElementById('result').innerHTML += '<br>Generated short code: ' + shortCode;
+      document.getElementById('result').innerHTML = 'Generated short code: ' + shortCode;
       try {
-        await setDoc(doc(db, 'urls', shortCode), {
+        await db.collection('urls').doc(shortCode).set({
           longUrl: longUrl,
-          createdAt: serverTimestamp()
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         const shortUrl = window.location.origin + '/' + shortCode;
-        document.getElementById('result').innerHTML += '<br>Success: Document written with ID: ' + shortCode + '<br>Shortened URL: <a href="' + shortUrl + '" target="_blank">' + shortUrl + '</a>';
+        document.getElementById('result').innerHTML = 'Success: Document written with ID: ' + shortCode + '<br>Shortened URL: <a href="' + shortUrl + '" target="_blank">' + shortUrl + '</a>';
       } catch (error) {
-        document.getElementById('result').innerHTML += '<br>Error: ' + error.message;
+        document.getElementById('result').innerHTML = 'Error: ' + error.message;
       }
     }
 
@@ -59,14 +52,14 @@ if (typeof firebase === 'undefined') {
       const path = window.location.pathname.substring(1); // Get short code from URL
       if (path) {
         try {
-          const docSnap = await getDoc(doc(db, 'urls', path));
-          if (docSnap.exists()) {
-            window.location.href = docSnap.data().longUrl; // Redirect to long URL
+          const doc = await db.collection('urls').doc(path).get();
+          if (doc.exists) {
+            window.location.href = doc.data().longUrl; // Redirect to long URL
           } else {
-            document.getElementById('result').innerHTML += '<br>URL not found';
+            document.getElementById('result').innerHTML = 'URL not found';
           }
         } catch (error) {
-          document.getElementById('result').innerHTML = '<br>Error: ' + error.message;
+          document.getElementById('result').innerHTML = 'Error: ' + error.message;
         }
       }
     };
