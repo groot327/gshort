@@ -40,7 +40,7 @@ function generateShortCode() {
 }
 
 // Function to shorten URL
-async function shortenUrl() {
+function shortenUrl() {
     document.getElementById('result').innerHTML = 'Function triggered';
     const longUrl = document.getElementById('longUrl').value;
     if (!longUrl || !longUrl.startsWith('http')) {
