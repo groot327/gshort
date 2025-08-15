@@ -1,7 +1,15 @@
+const { default: firebase } = require("firebase/compat/app");
+
 if (typeof firebase === 'undefined') {
     document.getElementById('result').innerHTML = 'Error: Firebase SDK not loaded'
 } else {
     document.getElementById('result').innerHTML = 'Firebase SDK loaded'
+    try {
+        firebase.initializeApp(firebaseConfig);
+        document.getElementById('result').innerHTML += '<br>Firebase initialized';
+    } catch (error) {
+        document.getElementById('result').innerHTML += '<br>Initialization error: ' + error.message;
+    }
 }
 
 // Import the functions you need from the SDKs you need
