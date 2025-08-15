@@ -1,6 +1,6 @@
 document.getElementById('result').innerHTML = 'Checking Firebase...';
 
-let db; // Declare db globally for use in shortenUrl and onload
+let db; // Declare db globally
 
 if (typeof firebase === 'undefined') {
   document.getElementById('result').innerHTML = 'Error: Firebase SDK not loaded. Check internet or script tags.';
@@ -30,8 +30,8 @@ function generateShortCode() {
   return Math.random().toString(36).substring(2, 8); // 6-character code
 }
 
-// Function to shorten URL (moved outside try block)
-async function shortenUrl() {
+// Function to shorten URL
+window.shortenUrl = async function () {
   document.getElementById('result').innerHTML = 'Function triggered';
   if (!db) {
     document.getElementById('result').innerHTML = 'Error: Firestore not initialized';
@@ -50,12 +50,12 @@ async function shortenUrl() {
       longUrl: longUrl,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-    const shortUrl = window.location.origin + '/' + shortCode;
+    const shortUrl = window.location.origin + '/gshort/' + shortCode; // Adjust for subdirectory
     document.getElementById('result').innerHTML = 'Success: Document written with ID: ' + shortCode + '<br>Shortened URL: <a href="' + shortUrl + '" target="_blank">' + shortUrl + '</a>';
   } catch (error) {
     document.getElementById('result').innerHTML = 'Error: ' + error.message;
   }
-}
+};
 
 // Redirect logic for shortened URLs
 window.onload = async function () {
@@ -63,19 +63,25 @@ window.onload = async function () {
     document.getElementById('result').innerHTML = 'Error: Firestore not initialized';
     return;
   }
-  const path = window.location.pathname.substring(1); // Get short code from URL
+  let path = window.location.pathname.substring(1); // Get full path
+  document.getElementById('result').innerHTML = 'Path checked: ' + path; // Debug
+  if (path.startsWith('gshort/')) {
+    path = path.substring('gshort/'.length); // Extract short code after 'gshort/'
+    document.getElementById('result').innerHTML += '<br>Extracted path: ' + path;
+  }
   if (path) {
     try {
+      document.getElementById('result').innerHTML += '<br>Querying Firestore for ' + path;
       const doc = await db.collection('urls').doc(path).get();
+      document.getElementById('result').innerHTML += '<br>Query completed';
       if (doc.exists) {
+        document.getElementById('result').innerHTML += '<br>Redirecting to ' + doc.data().longUrl;
         window.location.href = doc.data().longUrl; // Redirect to long URL
       } else {
-        document.getElementById('result').innerHTML = 'URL not found';
+        document.getElementById('result').innerHTML += '<br>URL not found';
       }
     } catch (error) {
-      document.getElementById('result').innerHTML = 'Error: ' + error.message;
+      document.getElementById('result').innerHTML += '<br>Error: ' + error.message;
     }
   }
 };
-
-// Final comment
