@@ -8,14 +8,19 @@
     body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
     input, button { padding: 10px; margin: 5px; }
     #result { margin-top: 20px; }
+    .shortener-form { display: block; }
+    .short-url { display: none; }
+    [data-shortcode] .shortener-form { display: none; }
+    [data-shortcode] .short-url { display: block; }
   </style>
 </head>
-<body>
-  <h1>Personal URL Shortener</h1>
-  <input type="text" id="longUrl" placeholder="Enter URL to shorten" style="width: 300px;">
-  <button onclick="shortenUrl()">Shorten</button>
-  <div id="result"></div>
-  <!-- Firebase SDK Compat for Global Usage - prepare for module soon -->
+<body data-shortcode="">
+  <div class="shortener-form">
+    <h1>Personal URL Shortener</h1>
+    <input type="text" id="longUrl" placeholder="Enter URL to shorten" style="width: 300px;">
+    <button onclick="shortenUrl()">Shorten</button>
+  </div>
+  <div class="short-url" id="result"></div>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js" defer></script>
   <script src="script.js" defer></script>
