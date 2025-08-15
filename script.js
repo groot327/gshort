@@ -1,12 +1,12 @@
 if (typeof firebase === 'undefined') {
-    document.getElementById('result').innerHTML = 'Error: Firebase SDK nof loaded'
+    document.getElementById('result').innerHTML = 'Error: Firebase SDK not loaded'
 } else {
     document.getElementById('result').innerHTML = 'Firebase SDK loaded'
 }
 
 // Import the functions you need from the SDKs you need
-// import { initializeApp } from "firebase/app";
-// import { getAnalytics } from "firebase/analytics";
+const { initializeApp } = firebase;
+const { getFirestore, doc, setDoc, serverTimestamp } = firebase.firestore;
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
@@ -24,11 +24,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db = getFirestore(app);
 
 // Function to generate a random short code
 function generateShortCode() {
@@ -37,6 +33,7 @@ function generateShortCode() {
 
 // Function to shorten URL
 async function shortenUrl() {
+    document.getElementById('result').innerHTML = 'Function triggered';
     const longUrl = document.getElementById('longUrl').value;
     if (!longUrl || !longUrl.startsWith('http')) {
         document.getElementById('result').innerHTML = 'Please enter a valid URL';
@@ -45,14 +42,14 @@ async function shortenUrl() {
 
     const shortCode = generateShortCode();
     try {
-        await db.collection('urls').doc(shortCode).set({
+        await setDoc(doc(db, 'urls', shortCode), {
             longUrl: longUrl,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            createdAt: serverTimestamp()
         });
-        const shortUrl = `${window.location.origin}/${shortCode}`;
-        document.getElementById('result').innerHTML = `Shortened URL: <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
+        const shortUrl = '${window.location.origin}/${shortCode}';
+        document.getElementById('result').innerHTML = 'Shortened URL: <a href="${shortUrl}" target="_blank">${shortUrl}</a>';
     } catch (error) {
-        document.getElementById('result').innerHTML = `Error: ${error.message}`;
+        document.getElementById('result').innerHTML = 'Error: ${error.message}';
     }
 }
 
@@ -61,14 +58,14 @@ window.onload = async function () {
     const path = window.location.pathname.substring(1); // Get short code from URL
     if (path) {
         try {
-            const doc = await db.collection('urls').doc(path).get();
-            if (doc.exists) {
-                window.location.href = doc.data().longUrl; // Redirect to long URL
+            const docSnap = await getDoc(doc(db, 'urls', path));
+            if (docSnap.exists) {
+                window.location.href = docSnap.data().longUrl; // Redirect to long URL
             } else {
                 document.getElementById('result').innerHTML = 'URL not found';
             }
         } catch (error) {
-            document.getElementById('result').innerHTML = `Error: ${error.message}`;
+            document.getElementById('result').innerHTML = 'Error: ${error.message}';
         }
     }
 };
