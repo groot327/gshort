@@ -1,5 +1,5 @@
 // Ensure firebase is loaded from CDN scripts
-document.getElementById('result').innerHTML = 'Checking Firebase...';
+document.getElementById('result').innerHTML += '<br>Checking Firebase...';
 
 if (typeof firebase === 'undefined') {
   document.getElementById('result').innerHTML += '<br>Error: Firebase SDK not loaded. Check internet or script tags.';
@@ -8,6 +8,10 @@ if (typeof firebase === 'undefined') {
   try {
     const { initializeApp } = firebase;
     const { getFirestore, doc, setDoc, serverTimestamp, getDoc } = firebase.firestore;
+    if (!firebaseConfig || firebaseConfig !== 'object') {
+      document.getElementById('result').innerHTML += '<br>Error: firebaseConfig is missing or invalid';
+      return;
+    }
     const firebaseConfig = {
       apiKey: "AIzaSyBBnkPe5qKDHWrPtgCBcAl4teU9W1h1qW0",
       authDomain: "g-url-shortener-64c6e.firebaseapp.com",
