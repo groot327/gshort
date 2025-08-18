@@ -25,92 +25,113 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script>
     (function() {
+      alert('Script started');
       let resultDiv = document.getElementById('result');
-      resultDiv.innerHTML = 'Checking Firebase...';
+      if (!resultDiv) {
+        alert('No #result, creating it');
+        document.body.innerHTML = '<div id="result"></div>';
+        resultDiv = document.getElementById('result');
+      }
 
-      let db;
-      if (typeof firebase === 'undefined') {
-        resultDiv.innerHTML += '<br>Error: Firebase SDK not loaded. Check internet.';
-        return;
-      } else {
-        resultDiv.innerHTML += '<br>Firebase SDK loaded';
+      function updateStatus(text) {
+        alert('Updating status to: ' + text);
+        resultDiv.innerHTML += '<br>' + text;
+        alert('Status now: ' + resultDiv.innerHTML);
       }
-      try {
-        const firebaseConfig = {
-          apiKey: "AIzaSyBBnkPe5qKDHWrPtgCBcAl4teU9W1h1qW0",
-          authDomain: "g-url-shortener-64c6e.firebaseapp.com",
-          projectId: "g-url-shortener-64c6e",
-          storageBucket: "g-url-shortener-64c6e.firebasestorage.app",
-          messagingSenderId: "786040303042",
-          appId: "1:786040303042:web:d5cd682d1ef4c2ba56ba5b",
-          measurementId: "G-DJYYW10D48"
-        };
-        firebase.initializeApp(firebaseConfig);
-        resultDiv.innerHTML += '<br>Firebase initialized';
-        db = firebase.firestore();
-      } catch (error) {
-        resultDiv.innerHTML += '<br>Init error: ' + error.message;
-        return;
-      }
+
+      // Initial status update
+      setTimeout(() => {
+        alert('Before setting initial text');
+        updateStatus('Checking Firebase...');
+
+        let db;
+        if (typeof firebase === 'undefined') {
+          updateStatus('Error: Firebase SDK not loaded. Check internet.');
+          alert('Firebase SDK not loaded');
+          return;
+        } else {
+          updateStatus('Firebase SDK loaded');
+          alert('Firebase SDK loaded');
+        }
+        try {
+          const firebaseConfig = {
+            apiKey: "AIzaSyBBnkPe5qKDHWrPtgCBcAl4teU9W1h1qW0",
+            authDomain: "g-url-shortener-64c6e.firebaseapp.com",
+            projectId: "g-url-shortener-64c6e",
+            storageBucket: "g-url-shortener-64c6e.firebasestorage.app",
+            messagingSenderId: "786040303042",
+            appId: "1:786040303042:web:d5cd682d1ef4c2ba56ba5b",
+            measurementId: "G-DJYYW10D48"
+          };
+          firebase.initializeApp(firebaseConfig);
+          updateStatus('Firebase initialized');
+          db = firebase.firestore();
+          alert('Firebase initialized');
+        } catch (error) {
+          updateStatus('Init error: ' + error.message);
+          alert('Init error: ' + error.message);
+          return;
+        }
+
+        (async function redirect() {
+          let path = window.location.pathname;
+          updateStatus('Path: ' + path);
+          let shortCode = path.replace('/gshort/', '');
+          if (shortCode && shortCode.length === 6) {
+            updateStatus('Short code: ' + shortCode);
+            document.body.setAttribute('data-shortcode', 'true');
+            updateStatus('Querying Firestore');
+            try {
+              const doc = await db.collection('urls').doc(shortCode).get();
+              updateStatus('Query done, exists: ' + doc.exists);
+              if (doc.exists) {
+                const longUrl = doc.data().longUrl;
+                updateStatus('Long URL: ' + longUrl);
+                updateStatus('Redirecting...');
+                window.location.replace(longUrl);
+              } else {
+                updateStatus('URL not found');
+              }
+            } catch (error) {
+              updateStatus('Error: ' + error.message);
+            }
+          } else {
+            updateStatus('No redirect');
+          }
+        })();
+      }, 100); // 100ms delay
 
       function generateShortCode() {
         return Math.random().toString(36).substring(2, 8);
       }
 
       window.shortenUrl = async function () {
-        resultDiv.innerHTML += '<br>Function triggered';
+        updateStatus('Function triggered');
         if (!db) {
-          resultDiv.innerHTML += '<br>Error: Firestore not initialized';
+          updateStatus('Error: Firestore not initialized');
           return;
         }
         const longUrl = document.getElementById('longUrl').value;
         if (!longUrl || !longUrl.startsWith('http')) {
-          resultDiv.innerHTML += '<br>Error: Valid URL required (http/https)';
+          updateStatus('Error: Valid URL required (http/https)');
           return;
         }
 
         const shortCode = generateShortCode();
-        resultDiv.innerHTML += '<br>Code: ' + shortCode;
+        updateStatus('Code: ' + shortCode);
         try {
           await db.collection('urls').doc(shortCode).set({
             longUrl: longUrl,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
           });
-          resultDiv.innerHTML += '<br>Success: Saved ID: ' + shortCode;
+          updateStatus('Success: Saved ID: ' + shortCode);
           const shortUrl = window.location.origin + '/gshort/' + shortCode;
-          resultDiv.innerHTML += '<br>Short URL: <a href="' + shortUrl + '">' + shortUrl + '</a>';
+          updateStatus('Short URL: <a href="' + shortUrl + '">' + shortUrl + '</a>');
         } catch (error) {
-          resultDiv.innerHTML += '<br>Error: ' + error.message;
+          updateStatus('Error: ' + error.message);
         }
       };
-
-      (async function redirect() {
-        let path = window.location.pathname;
-        resultDiv.innerHTML += '<br>Path: ' + path;
-        let shortCode = path.replace('/gshort/', '');
-        if (shortCode && shortCode.length === 6) {
-          resultDiv.innerHTML += '<br>Short code: ' + shortCode;
-          document.body.setAttribute('data-shortcode', 'true');
-          resultDiv.innerHTML += '<br>Querying Firestore';
-          try {
-            const doc = await db.collection('urls').doc(shortCode).get();
-            resultDiv.innerHTML += '<br>Query done, exists: ' + doc.exists;
-            if (doc.exists) {
-              const longUrl = doc.data().longUrl;
-              resultDiv.innerHTML += '<br>Long URL: ' + longUrl;
-              resultDiv.innerHTML += '<br>Redirecting...';
-              window.location.replace(longUrl);
-            } else {
-              resultDiv.innerHTML += '<br>URL not found';
-            }
-          } catch (error) {
-            resultDiv.innerHTML += '<br>Error: ' + error.message;
-          }
-        } else {
-          resultDiv.innerHTML += '<br>No redirect';
-        }
-      })();
-  })();
+    })();
   </script>
 </body>
 </html>
