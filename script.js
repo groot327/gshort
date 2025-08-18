@@ -7,6 +7,10 @@
 
   let db;
   try {
+    if (typeof firebase === 'undefined') {
+      alert('Firebase SDK not loaded');
+      return;
+    }
     const firebaseConfig = {
       apiKey: "AIzaSyBBnkPe5qKDHWrPtgCBcAl4teU9W1h1qW0",
       authDomain: "g-url-shortener-64c6e.firebaseapp.com",
@@ -57,22 +61,32 @@
     }
   };
 
-  // Redirect logic
+  // Redirect logic with Firebase check
   (async function redirect() {
-    let path = window.location.pathname;
-    let shortCode = path.replace('/gshort/', '');
-    if (shortCode && shortCode.length === 6) {
-      try {
-        const doc = await db.collection('urls').doc(shortCode).get();
-        if (doc.exists) {
-          const longUrl = doc.data().longUrl;
-          window.location.replace(longUrl);
-        } else {
-          resultDiv.innerHTML = 'URL not found';
-        }
-      } catch (error) {
-        resultDiv.innerHTML = 'Error: ' + error.message;
+    const path = window.location.pathname;
+    if (!path.startsWith('/gshort/')) return; // Only run on /gshort/ pages
+    alert('Redirect logic started for path: ' + path);
+    if (typeof firebase === 'undefined') {
+      alert('Firebase is not defined in redirect');
+      return;
+    }
+    const shortCode = path.replace('/gshort/', '');
+    if (shortCode.length !== 6) {
+      resultDiv.innerHTML = 'Invalid short code';
+      return;
+    }
+    try {
+      const doc = await db.collection('urls').doc(shortCode).get();
+      alert('Firestore query completed, exists: ' + doc.exists);
+      if (doc.exists) {
+        const longUrl = doc.data().longUrl;
+        window.location.replace(longUrl);
+      } else {
+        resultDiv.innerHTML = 'URL not found';
       }
+    } catch (error) {
+      resultDiv.innerHTML = 'Error: ' + error.message;
+      alert('Redirect error: ' + error.message);
     }
   })();
 })();
