@@ -1,40 +1,27 @@
-document.addEventListener('DOMContentLoaded', function() {
+(function() {
   let resultDiv = document.getElementById('result');
   if (!resultDiv) {
-    console.error('Error: #result not found');
-    document.write('<div id="result"></div>');
+    document.body.innerHTML += '<div id="result"></div>';
     resultDiv = document.getElementById('result');
   }
-  resultDiv.innerHTML = 'Checking Firebase...';
 
-  console.log('Script initialized');
-
-  let db; // Declare db globally
-
-  if (typeof firebase === 'undefined') {
-    resultDiv.innerHTML += '<br>Error: Firebase SDK not loaded';
-    console.error('Firebase SDK not loaded');
-  } else {
-    resultDiv.innerHTML += '<br>Firebase SDK loaded';
-    try {
-      const firebaseConfig = {
-        apiKey: "AIzaSyBBnkPe5qKDHWrPtgCBcAl4teU9W1h1qW0",
-        authDomain: "g-url-shortener-64c6e.firebaseapp.com",
-        projectId: "g-url-shortener-64c6e",
-        storageBucket: "g-url-shortener-64c6e.firebasestorage.app",
-        messagingSenderId: "786040303042",
-        appId: "1:786040303042:web:d5cd682d1ef4c2ba56ba5b",
-        measurementId: "G-DJYYW10D48"
-      };
-
-      firebase.initializeApp(firebaseConfig);
-      resultDiv.innerHTML += '<br>Firebase initialized';
-      db = firebase.firestore();
-      console.log('Firebase initialized');
-    } catch (error) {
-      resultDiv.innerHTML += '<br>Init error: ' + error.message;
-      console.error('Firebase init error:', error);
-    }
+  let db;
+  try {
+    const firebaseConfig = {
+      apiKey: "AIzaSyBBnkPe5qKDHWrPtgCBcAl4teU9W1h1qW0",
+      authDomain: "g-url-shortener-64c6e.firebaseapp.com",
+      projectId: "g-url-shortener-64c6e",
+      storageBucket: "g-url-shortener-64c6e.firebasestorage.app",
+      messagingSenderId: "786040303042",
+      appId: "1:786040303042:web:d5cd682d1ef4c2ba56ba5b",
+      measurementId: "G-DJYYW10D48"
+    };
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    alert('Firebase initialized successfully');
+  } catch (error) {
+    alert('Firebase initialization error: ' + error.message);
+    return;
   }
 
   function generateShortCode() {
@@ -42,75 +29,50 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   window.shortenUrl = async function () {
-    resultDiv.innerHTML += '<br>Function triggered';
-    console.log('Shorten triggered');
+    alert('Shorten function started');
     if (!db) {
-      resultDiv.innerHTML += '<br>Firestore not initialized';
-      console.error('Firestore not initialized');
+      alert('Firestore not initialized');
       return;
     }
-    const longUrl = document.getElementById('longUrl')?.value || '';
+    const longUrl = document.getElementById('longUrl').value;
     if (!longUrl || !longUrl.startsWith('http')) {
-      resultDiv.innerHTML += '<br>Invalid URL';
-      console.log('Invalid URL:', longUrl);
+      alert('Invalid URL');
       return;
     }
 
     const shortCode = generateShortCode();
-    resultDiv.innerHTML += '<br>Code: ' + shortCode;
+    alert('Generated short code: ' + shortCode);
     try {
       await db.collection('urls').doc(shortCode).set({
         longUrl: longUrl,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      resultDiv.innerHTML += '<br>Saved with ID: ' + shortCode;
+      resultDiv.innerHTML = 'URL created with ID: ' + shortCode;
       const shortUrl = window.location.origin + '/gshort/' + shortCode;
-      resultDiv.innerHTML += '<br>Short URL: <a href="' + shortUrl + '">' + shortUrl + '</a>';
-      console.log('Short URL created:', shortUrl);
+      resultDiv.innerHTML += '<br>Here is the URL: <a href="' + shortUrl + '">' + shortUrl + '</a>';
+      alert('URL saved and message set');
     } catch (error) {
-      resultDiv.innerHTML += '<br>Error: ' + error.message;
-      console.error('Save error:', error);
+      resultDiv.innerHTML = 'Error: ' + error.message;
+      alert('Save error: ' + error.message);
     }
   };
 
-  window.onload = async function () {
-    if (!db) {
-      resultDiv.innerHTML += '<br>Firestore init failed';
-      console.error('Firestore init failed in onload');
-      return;
-    }
-    try {
-      let path = window.location.pathname;
-      resultDiv.innerHTML += '<br>Path: ' + path;
-      console.log('Onload path:', path);
-      let shortCode = path.split('/').pop();
-      if (path.startsWith('/gshort/') && shortCode.length === 6) {
-        resultDiv.innerHTML += '<br>Short code: ' + shortCode;
-        document.body.setAttribute('data-shortcode', 'true');
-        console.log('Short code extracted:', shortCode);
-        resultDiv.innerHTML += '<br>Querying Firestore';
+  // Redirect logic
+  (async function redirect() {
+    let path = window.location.pathname;
+    let shortCode = path.replace('/gshort/', '');
+    if (shortCode && shortCode.length === 6) {
+      try {
         const doc = await db.collection('urls').doc(shortCode).get();
-        resultDiv.innerHTML += '<br>Query done, exists: ' + doc.exists;
         if (doc.exists) {
           const longUrl = doc.data().longUrl;
-          resultDiv.innerHTML += '<br>Long URL: ' + longUrl;
-          resultDiv.innerHTML += '<br>Redirecting to: ' + longUrl;
-          window.setTimeout(() => {
-            resultDiv.innerHTML += '<br>Redirect executed';
-            window.location.replace(longUrl);
-          }, 2000);
+          window.location.replace(longUrl);
         } else {
-          resultDiv.innerHTML += '<br>URL not found';
+          resultDiv.innerHTML = 'URL not found';
         }
-      } else if (path === '/gshort' || path === '/') {
-        resultDiv.innerHTML += '<br>At base page';
-        console.log('At base page');
-      } else {
-        resultDiv.innerHTML += '<br>Invalid path';
+      } catch (error) {
+        resultDiv.innerHTML = 'Error: ' + error.message;
       }
-    } catch (error) {
-      resultDiv.innerHTML += '<br>Onload error: ' + error.message;
-      console.error('Onload error:', error);
     }
-  };
-});
+  })();
+})();

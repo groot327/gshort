@@ -8,130 +8,17 @@
     body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
     input, button { padding: 10px; margin: 5px; }
     #result { margin-top: 20px; }
-    .shortener-form { display: block; }
-    .short-url { display: none; }
-    [data-shortcode="true"] .shortener-form { display: none; }
-    [data-shortcode="true"] .short-url { display: block; }
   </style>
 </head>
-<body data-shortcode="">
-  <div class="shortener-form">
+<body>
+  <div>
     <h1>Personal URL Shortener</h1>
     <input type="text" id="longUrl" placeholder="Enter URL to shorten" style="width: 300px;">
     <button onclick="shortenUrl()">Shorten</button>
   </div>
-  <div class="short-url" id="result"></div>
+  <div id="result"></div>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    (function() {
-      alert('Script started');
-      let resultDiv = document.getElementById('result');
-      if (!resultDiv) {
-        alert('No #result, creating it');
-        document.body.innerHTML = '<div id="result"></div>';
-        resultDiv = document.getElementById('result');
-      }
-
-      function updateStatus(text) {
-        alert('Updating status to: ' + text);
-        resultDiv.innerHTML += '<br>' + text;
-        alert('Status now: ' + resultDiv.innerHTML);
-      }
-
-      // Initial status update
-      setTimeout(() => {
-        alert('Before setting initial text');
-        updateStatus('Checking Firebase...');
-
-        let db;
-        if (typeof firebase === 'undefined') {
-          updateStatus('Error: Firebase SDK not loaded. Check internet.');
-          alert('Firebase SDK not loaded');
-          return;
-        } else {
-          updateStatus('Firebase SDK loaded');
-          alert('Firebase SDK loaded');
-        }
-        try {
-          const firebaseConfig = {
-            apiKey: "AIzaSyBBnkPe5qKDHWrPtgCBcAl4teU9W1h1qW0",
-            authDomain: "g-url-shortener-64c6e.firebaseapp.com",
-            projectId: "g-url-shortener-64c6e",
-            storageBucket: "g-url-shortener-64c6e.firebasestorage.app",
-            messagingSenderId: "786040303042",
-            appId: "1:786040303042:web:d5cd682d1ef4c2ba56ba5b",
-            measurementId: "G-DJYYW10D48"
-          };
-          firebase.initializeApp(firebaseConfig);
-          updateStatus('Firebase initialized');
-          db = firebase.firestore();
-          alert('Firebase initialized');
-        } catch (error) {
-          updateStatus('Init error: ' + error.message);
-          alert('Init error: ' + error.message);
-          return;
-        }
-
-        (async function redirect() {
-          let path = window.location.pathname;
-          updateStatus('Path: ' + path);
-          let shortCode = path.replace('/gshort/', '');
-          if (shortCode && shortCode.length === 6) {
-            updateStatus('Short code: ' + shortCode);
-            document.body.setAttribute('data-shortcode', 'true');
-            updateStatus('Querying Firestore');
-            try {
-              const doc = await db.collection('urls').doc(shortCode).get();
-              updateStatus('Query done, exists: ' + doc.exists);
-              if (doc.exists) {
-                const longUrl = doc.data().longUrl;
-                updateStatus('Long URL: ' + longUrl);
-                updateStatus('Redirecting...');
-                window.location.replace(longUrl);
-              } else {
-                updateStatus('URL not found');
-              }
-            } catch (error) {
-              updateStatus('Error: ' + error.message);
-            }
-          } else {
-            updateStatus('No redirect');
-          }
-        })();
-      }, 100); // 100ms delay
-
-      function generateShortCode() {
-        return Math.random().toString(36).substring(2, 8);
-      }
-
-      window.shortenUrl = async function () {
-        updateStatus('Function triggered');
-        if (!db) {
-          updateStatus('Error: Firestore not initialized');
-          return;
-        }
-        const longUrl = document.getElementById('longUrl').value;
-        if (!longUrl || !longUrl.startsWith('http')) {
-          updateStatus('Error: Valid URL required (http/https)');
-          return;
-        }
-
-        const shortCode = generateShortCode();
-        updateStatus('Code: ' + shortCode);
-        try {
-          await db.collection('urls').doc(shortCode).set({
-            longUrl: longUrl,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          updateStatus('Success: Saved ID: ' + shortCode);
-          const shortUrl = window.location.origin + '/gshort/' + shortCode;
-          updateStatus('Short URL: <a href="' + shortUrl + '">' + shortUrl + '</a>');
-        } catch (error) {
-          updateStatus('Error: ' + error.message);
-        }
-      };
-    })();
-  </script>
+  <script src="script.js" defer></script>
 </body>
 </html>
