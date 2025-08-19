@@ -1,17 +1,12 @@
 (function() {
-  alert('Script started');
   let resultDiv = document.getElementById('result');
   if (!resultDiv) {
-    alert('No #result, creating it');
     document.body.innerHTML = '<div id="result"></div>';
     resultDiv = document.getElementById('result');
   }
 
   function updateStatus(text) {
-    alert('Updating status to: ' + text);
     resultDiv.innerHTML += '<br>' + text;
-    alert('Status now: ' + resultDiv.innerHTML);
-    // Force re-render/reflow
     resultDiv.style.display = 'none';
     resultDiv.offsetHeight; // Trigger reflow
     resultDiv.style.display = 'block';
@@ -21,7 +16,6 @@
   updateStatus('Checking Firebase...');
   if (typeof firebase === 'undefined') {
     updateStatus('Error: Firebase SDK not loaded. Check internet.');
-    alert('Firebase SDK not loaded');
     return;
   }
   updateStatus('Firebase SDK loaded');
@@ -38,18 +32,21 @@
     firebase.initializeApp(firebaseConfig);
     updateStatus('Firebase initialized');
     db = firebase.firestore();
-    alert('Firebase initialized, db available');
   } catch (error) {
     updateStatus('Init error: ' + error.message);
-    alert('Init error: ' + error.message);
     return;
   }
 
-  // Redirect logic
+  function validateUrl(url) {
+    const isValid = url && url.startsWith('https://groot327.github.io');
+    updateStatus(`Validating URL: ${url}, Result: ${isValid}`);
+    return isValid;
+  }
+
   (async function redirect() {
-    const queryString = window.location.search.substring(1); // Remove the leading '?'
-    let shortCode = queryString.match(/^[a-zA-Z0-9]*/) ? queryString.match(/^[a-zA-Z0-9]*/)[0] : ''; // Extract only leading alphanumeric
-    if (!shortCode) return; // Only run if there’s a query
+    const queryString = window.location.search.substring(1);
+    let shortCode = queryString.match(/^[a-zA-Z0-9]*/) ? queryString.match(/^[a-zA-Z0-9]*/)[0] : '';
+    if (!shortCode) return;
     updateStatus('Redirect logic started for query: ' + queryString);
     if (shortCode.length !== 6) {
       updateStatus('Invalid short code');
@@ -58,7 +55,6 @@
     try {
       if (!db) {
         updateStatus('Firestore not available');
-        alert('Firestore not available in redirect');
         return;
       }
       const doc = await db.collection('urls').doc(shortCode).get();
@@ -71,7 +67,6 @@
       }
     } catch (error) {
       updateStatus('Redirect error: ' + error.message);
-      alert('Redirect error: ' + error.message);
     }
   })();
 
@@ -83,19 +78,19 @@
     updateStatus('Function triggered');
     if (!db) {
       updateStatus('Error: Firestore not initialized');
-      alert('Firestore not initialized in shortenUrl');
       return;
     }
     const longUrl = document.getElementById('longUrl').value;
-    if (!longUrl || !longUrl.startsWith('http')) {
-      updateStatus('Error: Valid URL required (http/https)');
+    if (!validateUrl(longUrl)) {
+      updateStatus('Invalid URL: Only groot327.github.io URLs are allowed.');
+      window.location.replace('https://fbi.gov/investigate');
       return;
     }
 
     const shortCode = generateShortCode();
     updateStatus('Generated code: ' + shortCode);
     try {
-      const docRef = await db.collection('urls').doc(shortCode).set({
+      await db.collection('urls').doc(shortCode).set({
         longUrl: longUrl,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
@@ -104,7 +99,6 @@
       updateStatus('Short URL: <a href="' + shortUrl + '">' + shortUrl + '</a>');
     } catch (error) {
       updateStatus('Save error: ' + error.message);
-      alert('Save error: ' + error.message);
     }
   };
 })();
