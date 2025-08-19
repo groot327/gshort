@@ -5,20 +5,28 @@
     resultDiv = document.getElementById('result');
   }
 
-  function updateStatus(text) {
-    resultDiv.innerHTML += '<br>' + text;
+  function updateStatus(isComment, text) {
+    alert('in update status isComment = ' + isComment);
+    if (isComment == true) {
+      resultDiv.innerHTML += '<!-- ' + text + ' -->';
+    } else {
+      resultDiv.innerHTML += '<br>' + text;
+    }
     resultDiv.style.display = 'none';
     resultDiv.offsetHeight; // Trigger reflow
     resultDiv.style.display = 'block';
+    alert('end update status');
   }
 
+  updateStatus(true, 'Script loaded'); // Debug: Confirm script is running
+
   let db;
-  updateStatus('Checking Firebase...');
+  updateStatus(true, 'Checking Firebase...');
   if (typeof firebase === 'undefined') {
-    updateStatus('Error: Firebase SDK not loaded. Check internet.');
+    updateStatus(true, 'Error: Firebase SDK not loaded. Check internet or script tags.');
     return;
   }
-  updateStatus('Firebase SDK loaded');
+  updateStatus(true, 'Firebase SDK loaded');
   try {
     const firebaseConfig = {
       apiKey: "AIzaSyBBnkPe5qKDHWrPtgCBcAl4teU9W1h1qW0",
@@ -30,47 +38,110 @@
       measurementId: "G-DJYYW10D48"
     };
     firebase.initializeApp(firebaseConfig);
-    updateStatus('Firebase initialized');
+    updateStatus(true, 'Firebase initialized');
     db = firebase.firestore();
   } catch (error) {
-    updateStatus('Init error: ' + error.message);
+    updateStatus(true, 'Init error: ' + error.message);
     return;
   }
 
   function validateUrl(url) {
-    const isValidProtocol = url && (url.startsWith('http://') || url.startsWith('https://'));
-    updateStatus(`Protocol check for ${url}: ${isValidProtocol}`);
-    const isBackdoorActive = typeof BACKDOOR_KEY !== 'undefined' && BACKDOOR_KEY !== '';
-    updateStatus(`Backdoor check: BACKDOOR_KEY defined: ${typeof BACKDOOR_KEY !== 'undefined'}, Value: ${BACKDOOR_KEY}, Active: ${isBackdoorActive}`);
-    const isValidDomain = url.startsWith('https://groot327.github.io') || (isBackdoorActive && isValidProtocol);
-    updateStatus(`Validating URL: ${url}, Backdoor: ${isBackdoorActive}, Result: ${isValidDomain}`);
-    return isValidDomain;
+    try {
+      // Initial checks
+      if (!url || typeof url !== 'string') {
+        updateStatus(true, `Validation error: URL is not a string: ${url}`);
+        updateStatus(false, 'URL Validation error. Please try again later.')
+        return false;
+      }
+
+      // Pre-check for traversal sequences in raw URL
+      const hasRawTraversal = /\/\.\.(\/|$)/.test(url) || /%2e%2e(\/|$)/i.test(url);
+      if (hasRawTraversal) {
+        updateStatus(true, `Validation error: Traversal sequence detected in raw URL: ${url}`);
+        updateStatus(false, 'URL Validation error. Please try again later.')
+        return false;
+      }
+
+      // Parse URL
+      let urlObj;
+      try {
+        urlObj = new URL(url);
+      } catch (e) {
+        updateStatus(true, `Validation error: Invalid URL format: ${url}, Error: ${e.message}`);
+        updateStatus(false, 'URL Validation error. Please try again later.')
+        return false;
+      }
+
+      // Protocol check
+      const isValidProtocol = urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+      updateStatus(true, `Protocol check for ${url}: ${isValidProtocol}`);
+      if (!isValidProtocol) {
+        updateStatus(true, `Validation error: Invalid protocol for ${url}`);
+        updateStatus(false, 'URL Validation error. Please try again later.')
+        return false;
+      }
+
+      // Hostname check
+      const isValidHostname = urlObj.hostname === 'groot327.github.io';
+      updateStatus(true, `Hostname check for ${url}: ${isValidHostname}`);
+      if (!isValidHostname) {
+        updateStatus(true, `Validation error: Invalid hostname for ${url}`);
+        updateStatus(false, 'Invalid host name. Please try again later.')
+        return false;
+      }
+
+      // Length check (e.g., 10,000 characters max)
+      const maxLength = 10000;
+      if (url.length > maxLength) {
+        updateStatus(true, `Validation error: URL exceeds ${maxLength} characters: ${url.length}`);
+        updateStatus(false, 'URL too long. Please try again later.')
+        return false;
+      }
+
+      // Whitelist characters for path and query
+      const allowedChars = /^[a-zA-Z0-9\-._/~:/?#[\]@!$&'()*+,;=]+$/;
+      const pathAndQuery = urlObj.pathname + (urlObj.search ? urlObj.search : '') + (urlObj.hash ? urlObj.hash : '');
+      const isValidPathQuery = allowedChars.test(pathAndQuery);
+      updateStatus(true, `Path/Query check for ${pathAndQuery}: ${isValidPathQuery}`);
+      if (!isValidPathQuery) {
+        updateStatus(true, `Validation error: Invalid characters in ${pathAndQuery}`);
+        updateStatus(false, 'URL Validation error. Please try again later.')
+        return false;
+      }
+
+      const isValidUrl = isValidProtocol && isValidHostname && isValidPathQuery;
+      updateStatus(true, `Validating URL: ${url}, Result: ${isValidUrl}`);
+      return isValidUrl;
+    } catch (error) {
+      updateStatus(true, `Validation error: ${error.message} for URL ${url}`);
+      return false;
+    }
   }
 
   (async function redirect() {
     const queryString = window.location.search.substring(1);
     let shortCode = queryString.match(/^[a-zA-Z0-9]*/) ? queryString.match(/^[a-zA-Z0-9]*/)[0] : '';
     if (!shortCode) return;
-    updateStatus('Redirect logic started for query: ' + queryString);
+    // updateStatus('Redirect logic started for query: ' + queryString);
     if (shortCode.length !== 6) {
-      updateStatus('Invalid short code');
+      updateStatus(true, 'Invalid short code');
       return;
     }
     try {
       if (!db) {
-        updateStatus('Firestore not available');
+        updateStatus(true, 'Firestore not available');
         return;
       }
       const doc = await db.collection('urls').doc(shortCode).get();
-      updateStatus('Firestore query completed, exists: ' + doc.exists);
+      updateStatus(true, 'Firestore query completed, exists: ' + doc.exists);
       if (doc.exists) {
         const longUrl = doc.data().longUrl;
         window.location.replace(longUrl);
       } else {
-        updateStatus('URL not found');
+        updateStatus(true, 'URL not found');
       }
     } catch (error) {
-      updateStatus('Redirect error: ' + error.message);
+      updateStatus(true, 'Redirect error: ' + error.message);
     }
   })();
 
@@ -79,30 +150,32 @@
   }
 
   window.shortenUrl = async function () {
-    updateStatus('Function triggered');
+    updateStatus(true, 'Function triggered');
     if (!db) {
-      updateStatus('Error: Firestore not initialized');
+      updateStatus(true, 'Error: Firestore not initialized');
       return;
     }
     const longUrl = document.getElementById('longUrl').value;
     if (!validateUrl(longUrl)) {
-      updateStatus('Invalid URL: Only groot327.github.io URLs are allowed (or use backdoor).');
-      window.location.replace('https://fbi.gov/investigate');
+      updateStatus(true, 'Invalid URL: Only groot327.github.io URLs with valid characters are allowed.');
+      // window.location.replace('https://fbi.gov/investigate');
       return;
     }
 
     const shortCode = generateShortCode();
-    updateStatus('Generated code: ' + shortCode);
+    updateStatus(true, 'Generated code: ' + shortCode);
     try {
       await db.collection('urls').doc(shortCode).set({
         longUrl: longUrl,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-      updateStatus('Success: Saved ID: ' + shortCode);
+      updateStatus(true, 'Success: Saved ID: ' + shortCode);
       const shortUrl = window.location.origin + '/gshort?' + shortCode;
-      updateStatus('Short URL: <a href="' + shortUrl + '">' + shortUrl + '</a>');
+      updateStatus(false, 'Short URL: <a href="' + shortUrl + '">' + shortUrl + '</a>');
     } catch (error) {
-      updateStatus('Save error: ' + error.message);
+      updateStatus(false, 'Save error: ' + error.message);
     }
   };
+
+  updateStatus(true, 'Script initialization complete'); // Debug: Confirm end of setup
 })();
