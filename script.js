@@ -39,7 +39,9 @@
 
   function validateUrl(url) {
     const isValidProtocol = url && (url.startsWith('http://') || url.startsWith('https://'));
-    const isBackdoorActive = typeof BACKDOOR_KEY !== 'undefined' && BACKDOOR_KEY; // True if BACKDOOR_KEY is defined and non-empty
+    updateStatus(`Protocol check for ${url}: ${isValidProtocol}`);
+    const isBackdoorActive = typeof BACKDOOR_KEY !== 'undefined' && BACKDOOR_KEY !== '';
+    updateStatus(`Backdoor check: BACKDOOR_KEY defined: ${typeof BACKDOOR_KEY !== 'undefined'}, Value: ${BACKDOOR_KEY}, Active: ${isBackdoorActive}`);
     const isValidDomain = url.startsWith('https://groot327.github.io') || (isBackdoorActive && isValidProtocol);
     updateStatus(`Validating URL: ${url}, Backdoor: ${isBackdoorActive}, Result: ${isValidDomain}`);
     return isValidDomain;
